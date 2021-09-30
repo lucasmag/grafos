@@ -101,6 +101,44 @@ class Grafo(object):
 
         return True
 
+    def floresta(self):
+        vertices = self.get_vertices()
+        visitado = {}
+        anterior = {}
+
+        n = len(vertices)
+        m = len(self.get_arestas())/2
+
+        if m >= n:
+            return False
+
+        for vertice in vertices:
+            visitado[vertice] = False
+            anterior[vertice] = -1
+
+        f = Fila()
+        i = 0
+
+        while False in visitado.values():
+            atual = vertices[i]
+            visitado[atual] = True
+            f.inserir(atual)
+
+            while not f.vazia():
+                u = f.tirar()
+
+                for w in self.lista_adjacencias[u]:
+                    if anterior[u] != w:
+                        if not visitado[w]:
+                            visitado[w] = True
+                            anterior[w] = u
+                            f.inserir(w)
+                        else:
+                            return False
+            i += 1
+
+        return True
+
     def vertice_conexo(self, g, k):
         if g.completo():
             return True
@@ -159,6 +197,17 @@ if __name__ == '__main__':
         "8": ["5", "6", "7"]
     }
 
+    floresta = {
+        "1": ["2", "3", "4"],
+        "2": ["1"],
+        "3": ["1"],
+        "4": ["1"],
+        "5": ["6"],
+        "6": ["5", "7", "8"],
+        "7": ["6"],
+        "8": ["6"]
+    }
+
     grafo_aresta_conexo = Grafo(lista_adj=aresta_conexo)
     print(grafo_aresta_conexo)
 
@@ -170,4 +219,8 @@ if __name__ == '__main__':
     print(f"{1}-Vertice-Conexo? {'Sim' if grafo_vertice_conexo.vertice_conexo(grafo_vertice_conexo, 1) else 'Não'}")
     print(f"{2}-Vertice-Conexo? {'Sim' if grafo_vertice_conexo.vertice_conexo(grafo_vertice_conexo, 2) else 'Não'}")
     print(f"{3}-Vertice-Conexo? {'Sim' if grafo_vertice_conexo.vertice_conexo(grafo_vertice_conexo, 3) else 'Não'}")
+
+    grafo_floresta = Grafo(lista_adj=floresta)
+    print(grafo_floresta)
+    print(f"Floresta? {'Sim' if grafo_floresta.floresta() else 'Não'}")
 
