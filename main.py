@@ -117,12 +117,13 @@ class Grafo(object):
             anterior[vertice] = -1
 
         f = Fila()
-        i = 0
 
-        while False in visitado.values():
-            atual = vertices[i]
-            visitado[atual] = True
-            f.inserir(atual)
+        for vertice in vertices:
+            if all(visitado.values()):
+                break
+
+            visitado[vertice] = True
+            f.inserir(vertice)
 
             while not f.vazia():
                 u = f.tirar()
@@ -135,7 +136,6 @@ class Grafo(object):
                             f.inserir(w)
                         else:
                             return False
-            i += 1
 
         return True
 
@@ -208,6 +208,17 @@ if __name__ == '__main__':
         "8": ["6"]
     }
 
+    nao_floresta = {
+        "1": ["2", "3", "4"],
+        "2": ["1"],
+        "3": ["1"],
+        "4": ["1"],
+        "5": ["6", "8"],
+        "6": ["5", "7", "8"],
+        "7": ["6"],
+        "8": ["5", "6"]
+    }
+
     grafo_aresta_conexo = Grafo(lista_adj=aresta_conexo)
     print(grafo_aresta_conexo)
 
@@ -223,4 +234,10 @@ if __name__ == '__main__':
     grafo_floresta = Grafo(lista_adj=floresta)
     print(grafo_floresta)
     print(f"Floresta? {'Sim' if grafo_floresta.floresta() else 'Não'}")
+    print(f"Conexo? {'Sim' if grafo_floresta.conexo() else 'Não'}")
+
+    grafo_nao_floresta = Grafo(lista_adj=nao_floresta)
+    print(nao_floresta)
+    print(f"Floresta? {'Sim' if grafo_nao_floresta.floresta() else 'Não'}")
+    print(f"Conexo? {'Sim' if grafo_nao_floresta.conexo() else 'Não'}")
 
