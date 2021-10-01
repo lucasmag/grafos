@@ -101,6 +101,44 @@ class Grafo(object):
 
         return True
 
+    def floresta(self):
+        vertices = self.get_vertices()
+        visitado = {}
+        anterior = {}
+
+        n = len(vertices)
+        m = len(self.get_arestas())/2
+
+        if m >= n:
+            return False
+
+        for vertice in vertices:
+            visitado[vertice] = False
+            anterior[vertice] = -1
+
+        f = Fila()
+
+        for vertice in vertices:
+            if all(visitado.values()):
+                break
+
+            visitado[vertice] = True
+            f.inserir(vertice)
+
+            while not f.vazia():
+                u = f.tirar()
+
+                for w in self.lista_adjacencias[u]:
+                    if anterior[u] != w:
+                        if not visitado[w]:
+                            visitado[w] = True
+                            anterior[w] = u
+                            f.inserir(w)
+                        else:
+                            return False
+
+        return True
+
     def vertice_conexo(self, g, k):
         if g.completo():
             return True
@@ -159,6 +197,28 @@ if __name__ == '__main__':
         "8": ["5", "6", "7"]
     }
 
+    floresta = {
+        "1": ["2", "3", "4"],
+        "2": ["1"],
+        "3": ["1"],
+        "4": ["1"],
+        "5": ["6"],
+        "6": ["5", "7", "8"],
+        "7": ["6"],
+        "8": ["6"]
+    }
+
+    nao_floresta = {
+        "1": ["2", "3", "4"],
+        "2": ["1"],
+        "3": ["1"],
+        "4": ["1"],
+        "5": ["6", "8"],
+        "6": ["5", "7", "8"],
+        "7": ["6"],
+        "8": ["5", "6"]
+    }
+
     grafo_aresta_conexo = Grafo(lista_adj=aresta_conexo)
     print(grafo_aresta_conexo)
 
@@ -170,4 +230,14 @@ if __name__ == '__main__':
     print(f"{1}-Vertice-Conexo? {'Sim' if grafo_vertice_conexo.vertice_conexo(grafo_vertice_conexo, 1) else 'Não'}")
     print(f"{2}-Vertice-Conexo? {'Sim' if grafo_vertice_conexo.vertice_conexo(grafo_vertice_conexo, 2) else 'Não'}")
     print(f"{3}-Vertice-Conexo? {'Sim' if grafo_vertice_conexo.vertice_conexo(grafo_vertice_conexo, 3) else 'Não'}")
+
+    grafo_floresta = Grafo(lista_adj=floresta)
+    print(grafo_floresta)
+    print(f"Floresta? {'Sim' if grafo_floresta.floresta() else 'Não'}")
+    print(f"Conexo? {'Sim' if grafo_floresta.conexo() else 'Não'}")
+
+    grafo_nao_floresta = Grafo(lista_adj=nao_floresta)
+    print(nao_floresta)
+    print(f"Floresta? {'Sim' if grafo_nao_floresta.floresta() else 'Não'}")
+    print(f"Conexo? {'Sim' if grafo_nao_floresta.conexo() else 'Não'}")
 
