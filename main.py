@@ -1,5 +1,6 @@
 from collections import defaultdict
 from copy import deepcopy
+from typing import List, Tuple
 
 
 class Fila:
@@ -7,7 +8,7 @@ class Fila:
         self.items = []
 
     def vazia(self):
-        return self.items == []
+        return len(self.items) == 0
 
     def inserir(self, item):
         self.items.insert(0, item)
@@ -20,11 +21,19 @@ class Fila:
 
 
 class Grafo(object):
-    def __init__(self, arestas=[], lista_adj=defaultdict(set), direcionado=False):
+    qtt_arestas: int
+    qtt_vertices: int
+    direcionado: bool
+
+    def __init__(self, arestas: List[Tuple[Tuple, int]] = [], lista_adj=defaultdict(set), direcionado=False):
         self.lista_adjacencias = lista_adj
         self.direcionado = direcionado
+
         if arestas:
             self.adiciona_arestas(arestas)
+
+        self.qtt_arestas = int(len(self.get_arestas()) / 2) if not direcionado else len(self.get_arestas())
+        self.qtt_vertices = len(self.get_vertices())
 
     def get_vertices(self):
         return list(self.lista_adjacencias.keys())
@@ -34,7 +43,7 @@ class Grafo(object):
 
     def adiciona_arestas(self, arestas):
         for u, v in arestas:
-            self.adiciona_arco(u, v)
+            self.adiciona_aresta(u, v)
 
     def remove_aresta(self, aresta):
         u, v = aresta[0], aresta[1]
@@ -49,7 +58,7 @@ class Grafo(object):
         nova_lista = {k: list(filter(lambda x: x != vertice, v)) for k, v in nova_lista.items()}
         return Grafo(lista_adj=nova_lista)
 
-    def adiciona_arco(self, u, v):
+    def adiciona_aresta(self, u, v):
         self.lista_adjacencias[u].add(v)
         if not self.direcionado:
             self.lista_adjacencias[v].add(u)
@@ -101,15 +110,33 @@ class Grafo(object):
 
         return True
 
+    def floresta_melhorado(self):
+        visitados = set()
+
+        def busca_em_profundidade(vertice, anterior):
+            if vertice in visitados:
+                return False
+
+            visitados.add(vertice)
+
+            for adj in self.lista_adjacencias[vertice]:
+                if adj != anterior:
+                    if not busca_em_profundidade(adj, vertice):
+                        return False
+
+            return True
+
+        for vertice in self.lista_adjacencias:
+            if vertice not in visitados and not busca_em_profundidade(vertice, -1):
+                return False
+        return True
+
     def floresta(self):
         vertices = self.get_vertices()
         visitado = {}
         anterior = {}
 
-        n = len(vertices)
-        m = len(self.get_arestas())/2
-
-        if m >= n:
+        if self.qtt_arestas >= self.qtt_vertices:
             return False
 
         for vertice in vertices:
@@ -152,6 +179,26 @@ class Grafo(object):
                 return False
 
         return True
+
+    def arvore_geradora(self, pesos_arestas):
+        arestas_floresta = []
+
+        ordenacao = lambda peso: peso[1]
+        pesos_arestas.sort(key=ordenacao)
+
+        i = 0
+        custo = 0
+        while len(arestas_floresta) < self.qtt_vertices - 1:
+            arestas_atuais = [pesos_arestas[i][0]]
+            arestas_atuais.extend(arestas_floresta)
+
+            if Grafo(arestas=arestas_atuais).floresta_melhorado():
+                arestas_floresta.append(pesos_arestas[i][0])
+                custo += pesos_arestas[i][1]
+
+            i += 1
+
+        return arestas_floresta, custo
 
 
 if __name__ == '__main__':
@@ -219,6 +266,33 @@ if __name__ == '__main__':
         "8": ["5", "6"]
     }
 
+    arvore_geradora = ({
+        "1": ["2", "3", "4"],
+        "2": ["1", "3", "4"],
+        "3": ["1", "2", "4", "6"],
+        "4": ["1", "2", "3", "5"],
+        "5": ["4", "6", "7", "8"],
+        "6": ["3", "5", "7", "8"],
+        "7": ["5", "6", "8"],
+        "8": ["5", "6", "7"]
+    },
+    [
+        (("1", "2"), 6),
+        (("1", "3"), 8),
+        (("1", "4"), 4),
+        (("2", "3"), 1),
+        (("2", "4"), 10),
+        (("3", "4"), 5),
+        (("3", "6"), 3),
+        (("4", "5"), 11),
+        (("5", "6"), 12),
+        (("5", "7"), 9),
+        (("5", "8"), 7),
+        (("6", "7"), 14),
+        (("6", "8"), 13),
+        (("7", "8"), 2),
+    ])
+
     grafo_aresta_conexo = Grafo(lista_adj=aresta_conexo)
     print(grafo_aresta_conexo)
 
@@ -240,4 +314,11 @@ if __name__ == '__main__':
     print(nao_floresta)
     print(f"Floresta? {'Sim' if grafo_nao_floresta.floresta() else 'Não'}")
     print(f"Conexo? {'Sim' if grafo_nao_floresta.conexo() else 'Não'}")
+
+    # grafo_arvore_geradora = Grafo(lista_adj=arvore_geradora[0])
+    # print(grafo_arvore_geradora.arvore_geradora(arvore_geradora[1]))
+
+    # teste2 = [('1', '4'), ('3', '4'), ('2', '3'), ('5', '8'), ('7', '8'), ('3', '6')]
+    # gra = Grafo(arestas=teste2)
+    # print(gra.floresta_melhorado())
 
